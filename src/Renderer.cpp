@@ -1,7 +1,7 @@
 #include "Renderer.h" 
 #include "Utils.h"
 #include <simd/simd.h>
-
+#include <cstdint>
 #include <iostream>
 
 struct Vertex
@@ -16,6 +16,11 @@ static const Vertex Vertices[] =
     {{ 0.0f,  0.5f, 0.0f, 1.0f},   {1.0f, 0.0f, 0.0f, 1.0f}},
     {{-0.5f, -0.5f, 0.0f, 1.0f},   {0.0f, 1.0f, 0.0f, 1.0f}},
     {{ 0.5f, -0.5f, 0.0f, 1.0f},   {0.0f, 0.0f, 1.0f, 1.0f}},
+};
+
+static const uint16_t Indices[] = 
+{
+  0, 1, 2
 };
 
 MyMTKViewDelegate::MyMTKViewDelegate( MTL::Device* pDevice ) : MTK::ViewDelegate(), _pRenderer( new Renderer( pDevice ) ) {}
@@ -34,6 +39,7 @@ Renderer::Renderer( MTL::Device* pDevice ) : _pDevice( pDevice->retain() )
 
 Renderer::~Renderer()
 {
+  IndexBuffer->release();
   VertexBuffer->release();
   _pShaderLibrary->release();
   _pPSO->release();
@@ -78,6 +84,28 @@ void Renderer::BuildRenderPipeline()
   pDesc->setVertexFunction( pVertexFn );
   pDesc->setFragmentFunction( pFragFn );
   pDesc->colorAttachments()->object(0)->setPixelFormat( MTL::PixelFormat::PixelFormatBGRA8Unorm_sRGB );
+  if(!pDesc)
+  {
+    std::fprintf(stderr, "failed to create render pipeline descriptor\n");
+    Assert(false);
+  }
+
+  MTL::VertexDescriptor* VertexDesc = MTL::VertexDescriptor::alloc()->init();
+  VertexDesc->attributes()->object(0)->setFormat(MTL::VertexFormat::VertexFormatFloat4);
+  VertexDesc->attributes()->object(0)->setOffset(offsetof(Vertex, position));
+  VertexDesc->attributes()->object(0)->setBufferIndex(0);
+  VertexDesc->attributes()->object(1)->setFormat(MTL::VertexFormat::VertexFormatFloat4);
+  VertexDesc->attributes()->object(1)->setOffset(offsetof(Vertex, color));
+  VertexDesc->attributes()->object(1)->setBufferIndex(0);
+  VertexDesc->layouts()->object(0)->setStride(sizeof(Vertex));
+  VertexDesc->layouts()->object(0)->setStepFunction(MTL::VertexStepFunction::VertexStepFunctionPerVertex);
+  if(!VertexDesc)
+  {
+    std::fprintf(stderr, "failed to create vertex descriptor\n");
+    Assert(false);
+  }
+
+  pDesc->setVertexDescriptor(VertexDesc);
 
   NS::Error* pError = nullptr;
   _pPSO = _pDevice->newRenderPipelineState( pDesc, &pError );
@@ -89,6 +117,7 @@ void Renderer::BuildRenderPipeline()
 
   pVertexFn->release();
   pFragFn->release();
+  VertexDesc->release();
   pDesc->release();
   _pShaderLibrary = pLibrary;
 }
@@ -96,9 +125,10 @@ void Renderer::BuildRenderPipeline()
 void Renderer::BuildBuffers()
 {  
   VertexBuffer = _pDevice->newBuffer(Vertices, sizeof(Vertices), MTL::ResourceStorageModeShared);
-  if(!VertexBuffer)
+  IndexBuffer = _pDevice->newBuffer(Indices, sizeof(Indices), MTL::ResourceStorageModeShared); 
+  if(!VertexBuffer || !IndexBuffer)
   {
-    std::fprintf(stderr, "error creating vertexbuffer \n");
+    std::fprintf(stderr, "error creating Buffer\n");
     Assert(false);
   }
 }
@@ -113,7 +143,7 @@ void Renderer::draw( MTK::View* pView )
   MTL::RenderCommandEncoder* Encoder = Command->renderCommandEncoder( RenderPassDescriptor );
   Encoder->setRenderPipelineState( _pPSO );
   Encoder->setVertexBuffer(VertexBuffer, 0, 0);
-  Encoder->drawPrimitives( MTL::PrimitiveType::PrimitiveTypeTriangle, NS::UInteger(0), NS::UInteger(3) );
+  Encoder->drawIndexedPrimitives( MTL::PrimitiveType::PrimitiveTypeTriangle, 3, MTL::IndexType::IndexTypeUInt16, IndexBuffer, 0);
   Encoder->endEncoding();
 
   Command->presentDrawable( pView->currentDrawable() );

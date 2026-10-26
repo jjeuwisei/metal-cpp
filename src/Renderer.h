@@ -21,6 +21,8 @@ class Renderer
  MTL::RenderPipelineState* _pPSO;
  MTL::Library* _pShaderLibrary;
  MTL::Buffer* VertexBuffer;
+ MTL::Buffer* IndexBuffer = nullptr;
+ MTL::RenderPipelineDescriptor* VertexDescriptor = nullptr;
 };
 
 class MyMTKViewDelegate : public MTK::ViewDelegate

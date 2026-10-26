@@ -7,18 +7,18 @@ struct VertexOut
   half3 color;
 };
 
-struct Vertex
+struct VertexIn
 {
-  float4 position;
-  float4 color;
+  float4 position [[attribute(0)]];
+  float4 color [[attribute(1)]];
 };
 
 vertex VertexOut vertexMain
-( uint vertexId [[vertex_id]], device const Vertex* vertices[[buffer(0)]] ) 
+( VertexIn in [[stage_in]]) 
 {
   VertexOut attributes;
-  attributes.position = vertices[vertexId].position;
-  attributes.color = half3(vertices[vertexId].color.rgb);
+  attributes.position = in.position;
+  attributes.color = half3(in.color.rgb);
   return attributes;
 }
 
