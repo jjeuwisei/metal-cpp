@@ -10,15 +10,17 @@ class Renderer
  Renderer( MTL::Device* pDevice);
  ~Renderer();
  void draw( MTK::View* pView );
- void buildShaders();
- void buildBuffers();
+ void BuildRenderPipeline();
+ void BuildBuffers();
+ bool Initiliaze();
+ MTL::Library* LoadLibrary();
 
  private:
  MTL::Device* _pDevice;
- MTL::CommandQueue* _pCommandQueue;
+ MTL::CommandQueue* CommandQueue;
  MTL::RenderPipelineState* _pPSO;
- MTL::Buffer* _pVertexPositionsBuffer;
- MTL::Buffer* _pVertexColorsBuffer;
+ MTL::Library* _pShaderLibrary;
+ MTL::Buffer* VertexBuffer;
 };
 
 class MyMTKViewDelegate : public MTK::ViewDelegate
