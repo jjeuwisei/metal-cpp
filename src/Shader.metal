@@ -14,10 +14,10 @@ struct VertexIn
 };
 
 vertex VertexOut vertexMain
-( VertexIn in [[stage_in]]) 
+( VertexIn in [[stage_in]], constant float4x4& mvp[[buffer(1)]]) 
 {
   VertexOut attributes;
-  attributes.position = in.position;
+  attributes.position = mvp * in.position;
   attributes.color = half3(in.color.rgb);
   return attributes;
 }

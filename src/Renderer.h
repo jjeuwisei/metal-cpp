@@ -3,6 +3,7 @@
 
 #include <Appkit/AppKit.hpp>
 #include <MetalKit/MetalKit.hpp>
+#include <simd/simd.h>
 
 class Renderer
 {
@@ -23,6 +24,7 @@ class Renderer
  MTL::Buffer* VertexBuffer;
  MTL::Buffer* IndexBuffer = nullptr;
  MTL::RenderPipelineDescriptor* VertexDescriptor = nullptr;
+ MTL::DepthStencilState* DepthState = nullptr;
 };
 
 class MyMTKViewDelegate : public MTK::ViewDelegate
@@ -35,4 +37,9 @@ class MyMTKViewDelegate : public MTK::ViewDelegate
   private:
   Renderer* _pRenderer;
 };
+
+static simd_float4x4 RotationY(float angle);
+static simd_float4x4 Translation(float x, float y, float z);
+static simd_float4x4 Perspective(float fovY, float aspect, float nearZ, float farZ);
+
 #endif

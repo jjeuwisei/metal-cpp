@@ -5,5 +5,7 @@
   if( Expression ) {} \
   else { __builtin_trap(); }
 
+#define ArrayCount(Array) sizeof(Array) / sizeof((Array)[0])  
+
 #endif
 
